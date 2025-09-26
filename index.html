@@ -10,66 +10,53 @@
   </style>
 </head>
 <body>
-  <h1>Upload Word or Excel File</h1>
-  <input type="file" id="fileInput" accept=".docx,.xlsx" />
-  <textarea id="outputText" placeholder="Extracted text will appear here..."></textarea>
-  <br>
-  <button onclick="copyText()">Copy to Clipboard</button>
+<h2>Downloadable Files</h2>
+<ul id="fileList">
+  <li>
+    <a href="files/file1.docx" download>Download file1.docx</a>
+  </li>
+  <li>
+    <a href="files/file2.xlsx" download>Download file2.xlsx</a>
+  </li>
+  <li>
+    <a href="files/notes.pdf" download>Download notes.pdf</a>
+  </li>
+</ul>
+
 
   <!-- JS libraries -->
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const outputText = document.getElementById('outputText');
+  async function listRepoFiles() {
+    const repoOwner = 'Chinmayhadge';
+    const repoName = 'istudioclick';
+    const folderPath = ''; // Folder in repo
 
-    fileInput.addEventListener('change', async function () {
-      const file = fileInput.files[0];
-      if (!file) return;
+    const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`);
+    const files = await response.json();
 
-      const reader = new FileReader();
+    const listContainer = document.getElementById('fileList');
 
-      if (file.name.endsWith('.docx')) {
-        reader.onload = function (e) {
-          const arrayBuffer = e.target.result;
-          mammoth.extractRawText({ arrayBuffer: arrayBuffer })
-            .then(result => {
-              outputText.value = result.value;
-            })
-            .catch(err => {
-              outputText.value = "Error reading .docx file.";
-              console.error(err);
-            });
-        };
-        reader.readAsArrayBuffer(file);
-      } else if (file.name.endsWith('.xlsx')) {
-        reader.onload = function (e) {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          let result = '';
-
-          workbook.SheetNames.forEach(sheetName => {
-            const worksheet = workbook.Sheets[sheetName];
-            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            json.forEach(row => {
-              result += row.join('\t') + '\n';
-            });
-          });
-
-          outputText.value = result;
-        };
-        reader.readAsArrayBuffer(file);
-      } else {
-        alert("Unsupported file type. Please upload .docx or .xlsx files.");
+    files.forEach(file => {
+      if (file.type === "file") {
+        const listItem = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = file.download_url;
+        link.innerText = `Download ${file.name}`;
+        link.setAttribute('download', file.name);
+        listItem.appendChild(link);
+        listContainer.appendChild(listItem);
       }
     });
+  }
 
-    function copyText() {
-      outputText.select();
-      document.execCommand("copy");
-      alert("Text copied to clipboard!");
-    }
-  </script>
+  window.onload = listRepoFiles;
+</script>
+
+<h2>Downloadable Files (via GitHub API)</h2>
+<ul id="fileList"></ul>
+
 </body>
 </html>
