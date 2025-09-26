@@ -43,9 +43,25 @@
       if (file.type === "file") {
         const listItem = document.createElement('li');
         const link = document.createElement('a');
-        link.href = file.download_url;
+        link.href = '#';
         link.innerText = `Download ${file.name}`;
-        link.setAttribute('download', file.name);
+
+        link.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const fileResponse = await fetch(file.download_url);
+          const blob = await fileResponse.blob();
+          const url = URL.createObjectURL(blob);
+
+          const tempLink = document.createElement('a');
+          tempLink.href = url;
+          tempLink.download = file.name;
+          tempLink.style.display = 'none';
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
+          URL.revokeObjectURL(url);
+        });
+
         listItem.appendChild(link);
         listContainer.appendChild(listItem);
       }
