@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Text Extractor</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    textarea { width: 100%; height: 300px; margin-top: 10px; }
+    button { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Upload Word or Excel File</h1>
+  <input type="file" id="fileInput" accept=".docx,.xlsx" />
+  <textarea id="outputText" placeholder="Extracted text will appear here..."></textarea>
+  <br>
+  <button onclick="copyText()">Copy to Clipboard</button>
+
+  <!-- JS libraries -->
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const outputText = document.getElementById('outputText');
+
+    fileInput.addEventListener('change', async function () {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      if (file.name.endsWith('.docx')) {
+        reader.onload = function (e) {
+          const arrayBuffer = e.target.result;
+          mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+            .then(result => {
+              outputText.value = result.value;
+            })
+            .catch(err => {
+              outputText.value = "Error reading .docx file.";
+              console.error(err);
+            });
+        };
+        reader.readAsArrayBuffer(file);
+      } else if (file.name.endsWith('.xlsx')) {
+        reader.onload = function (e) {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          let result = '';
+
+          workbook.SheetNames.forEach(sheetName => {
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            json.forEach(row => {
+              result += row.join('\t') + '\n';
+            });
+          });
+
+          outputText.value = result;
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        alert("Unsupported file type. Please upload .docx or .xlsx files.");
+      }
+    });
+
+    function copyText() {
+      outputText.select();
+      document.execCommand("copy");
+      alert("Text copied to clipboard!");
+    }
+  </script>
+</body>
+</html>
