@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-<h2>Downloadable Files - New</h2>
+<h2>Downloadable Files - V2</h2>
 <ul id="fileList">
   <li>
     <a href="files/file1.docx" download>Download file1.docx</a>
@@ -88,7 +88,7 @@ async function uploadToGitHub() {
   const response = await fetch('https://api.github.com/repos/Chinmayhadge/istudioclick/contents/' + file.name, {
     method: 'PUT',
     headers: {
-      'Authorization': 'token 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',
+      'Authorization': 'token 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',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -114,5 +114,6 @@ async function uploadToGitHub() {
 
 </body>
 </html>
+
 
 
